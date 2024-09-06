@@ -1,10 +1,16 @@
 import streamlit as st
 import pandas as pd 
 import datetime
+import sqlite3
 
-# Read the existing journal entries from the CSV file
-csv_file = 'entries.csv'
-existing_entries = pd.read_csv(csv_file)
+# Read the existing journal entries from the db file
+
+conn = sqlite3.connect('journal.db')
+cursor = conn.cursor()
+
+cursor.execute("SELECT * FROM entries")
+existing_entries = cursor.fetchall()
+existing_entries = pd.DataFrame(existing_entries, columns=['Date', 'Spiritual Practice', 'Meditation Time', 'Reading Minutes', 'Gratitude Entries', 'Mindful Moments', 'Physical Exercise', 'Journaling Thoughts'])
 
 
 # Create an empty DataFrame to store the journal entries
@@ -28,6 +34,8 @@ journaling_thoughts = st.text_area('Journaling Thoughts', height=100)
 
 # Add a submit button
 if st.button('Submit'):
+    
+
     new_entry = pd.DataFrame({'Date': [date],
                           'Spiritual Practice': [spiritual_practice],
                           'Meditation Time': [meditation_time],
@@ -36,10 +44,14 @@ if st.button('Submit'):
                           'Mindful Moments': [mindful_moments],
                           'Physical Exercise': [physical_exercise],
                           'Journaling Thoughts': [journaling_thoughts]})
-    journal_df = pd.concat([existing_entries, new_entry], ignore_index=True)
-    # Save the updated journal entries to the CSV file
-    journal_df.to_csv(csv_file, index=False)
-
+    
+    if not new_entry.isnull().values.any() and not (new_entry == 0).values.any():
+        # Add the new entry to the journal DataFrame
+        journal_df.to_sql('journal_entries', conn, if_exists='replace', index=False)
+        journal_df = pd.concat([existing_entries, new_entry], ignore_index=True)
+        st.toast('Journal entry saved!', icon='check')
+    else:
+        st.error('Please fill in all fields and make sure they are not zero.')
 
 if __name__ == '__main__':
     st.write(journal_df)  # Display the journal entries DataFrame
