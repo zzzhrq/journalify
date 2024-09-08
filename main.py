@@ -34,8 +34,6 @@ journaling_thoughts = st.text_area('Journaling Thoughts', height=100)
 
 # Add a submit button
 if st.button('Submit'):
-    
-
     new_entry = pd.DataFrame({'Date': [date],
                           'Spiritual Practice': [spiritual_practice],
                           'Meditation Time': [meditation_time],
@@ -45,11 +43,11 @@ if st.button('Submit'):
                           'Physical Exercise': [physical_exercise],
                           'Journaling Thoughts': [journaling_thoughts]})
     
-    if not new_entry.isnull().values.any() and not (new_entry == 0).values.any():
+    if not new_entry.isnull().values.any():
         # Add the new entry to the journal DataFrame
         journal_df.to_sql('journal_entries', conn, if_exists='replace', index=False)
         journal_df = pd.concat([existing_entries, new_entry], ignore_index=True)
-        st.toast('Journal entry saved!', icon='check')
+        st.success('Journal entry saved! ✔️')
     else:
         st.error('Please fill in all fields and make sure they are not zero.')
 
